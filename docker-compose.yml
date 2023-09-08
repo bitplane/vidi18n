@@ -1,0 +1,45 @@
+version: '3.9'
+services:
+  redis:
+    image: redis:latest
+    volumes:
+      - redis-data:/data
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./web/conf:/etc/nginx/conf.d
+      - ./web/wwwroot:/usr/share/nginx/html
+    ports:
+      - "8080:80"
+
+  manager:
+    build:
+      context: ./python
+      args:
+        SERVICE_NAME: manager
+    environment:
+      REDIS_HOST: redis
+    ports:
+      - "8081:8081"
+    volumes:
+      - /tmp/vidi18n:/tmp/vidi18n
+    user: "${UID}:${GID}"
+    depends_on: 
+      - redis
+
+  download:
+    build:
+      context: ./python
+      args:
+        SERVICE_NAME: download
+    environment:
+      REDIS_HOST: redis
+    volumes:
+      - /tmp/vidi18n/download:/tmp/vidi18n/download
+    user: "${UID}:${GID}"
+    depends_on:
+      - redis
+
+
+volumes:
+  redis-data:

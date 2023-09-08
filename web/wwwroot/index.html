@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vidi18n</title>
+  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+</head>
+<body>
+  <video id="videoPlayer" controls width="640" height="360"></video>
+
+  <script>
+    var url = '/output/manifest.mpd';
+    var player = dashjs.MediaPlayer().create();
+    player.initialize(document.querySelector("#videoPlayer"), url, true);
+  </script>
+</body>
+</html>

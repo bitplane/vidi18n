@@ -1,0 +1,8 @@
+.venv
+*.mp4
+*.mkv
+*.m4s
+*.mpd
+.coverage
+__pycache__
+dist

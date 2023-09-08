@@ -1,0 +1,46 @@
+[project]
+name = "vidi18n"
+description = "Automatic, online video translation server"
+version = "0.1.0"
+authors = [
+    { name = "Gareth Davidson", email = "gaz@bitplane.net" }
+]
+
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+
+dependencies = [
+    "pydantic==2.3.0",
+    "redis==5.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "flake8",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "coverage"
+]
+
+manager = [
+    "fastapi==0.103.1",
+    "uvicorn==0.23.2"
+]
+
+
+[build-system]
+build-backend = "flit_core.buildapi"
+requires = ["flit_core >=3.2,<4"]
+
+
+[project.urls]
+"Homepage" = "https://github.com/bitplane/vidi18n"
+"Bug Tracker" = "https://github.com/bitplane/vidi18n"
+
