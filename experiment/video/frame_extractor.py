@@ -1,6 +1,7 @@
 import cv2
-from .cache import get_cached, set_cached
 import numpy as np
+
+from .cache import get_cached, set_cached
 
 
 def frames(file_name: str, step: int = 1):
@@ -9,7 +10,7 @@ def frames(file_name: str, step: int = 1):
     cap = cv2.VideoCapture(file_name)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    print('total_frames', total_frames)
+    print("total_frames", total_frames)
 
     while cap.isOpened() and current_frame < total_frames:
         frame_data = get_cached(file_name, f"frame_{current_frame:08}.png")

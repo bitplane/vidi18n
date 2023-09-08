@@ -24,7 +24,7 @@ services:
     volumes:
       - /tmp/vidi18n:/tmp/vidi18n
     user: "${UID}:${GID}"
-    depends_on: 
+    depends_on:
       - redis
 
   download:

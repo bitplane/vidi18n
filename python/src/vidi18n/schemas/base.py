@@ -37,4 +37,3 @@ class Response(Message):
     """
     Status of a response
     """
-

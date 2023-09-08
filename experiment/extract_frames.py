@@ -1,7 +1,6 @@
+from matplotlib import pyplot as plt
 from video.frame_extractor import frames
 from video.ocr import ocr
-import json
-from matplotlib import pyplot as plt
 
 file_name = "video.mkv"
 

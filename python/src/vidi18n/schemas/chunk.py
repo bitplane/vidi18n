@@ -10,7 +10,7 @@ class ChunkUpdateResponse(Response):
     """
     The parent video's id
     """
-    
+
     id: int
     """
     The index of the chunk

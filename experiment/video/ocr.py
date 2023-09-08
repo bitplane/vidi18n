@@ -8,9 +8,7 @@ lang = "chi_sim"
 def ocr(frame):
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     data = pytesseract.image_to_data(
-        gray_frame,
-        output_type=pytesseract.Output.DICT,
-        lang="chi_sim"
+        gray_frame, output_type=pytesseract.Output.DICT, lang="chi_sim"
     )
     n_boxes = len(data["level"])
     for i in range(n_boxes):

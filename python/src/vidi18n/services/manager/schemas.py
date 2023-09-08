@@ -26,7 +26,7 @@ class ProcessingStep(str, Enum):
 
     TRANSLATE_AUDIO = "translate_audio"
     """
-    Machine translation 
+    Machine translation
     """
 
 

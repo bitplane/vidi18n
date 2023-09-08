@@ -1,7 +1,7 @@
 from uvicorn import run
+from vidi18n.common.redis import DOWNLOAD_RESPONSE_QUEUE, queue_worker
 
 from .listeners import download_response
-from vidi18n.common.redis import queue_worker, DOWNLOAD_RESPONSE_QUEUE
 
 
 def main():

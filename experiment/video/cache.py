@@ -1,7 +1,5 @@
-import hashlib
-import shutil
-import re
 import os
+import shutil
 
 CACHE_DIR = "/tmp/video_cache"
 
@@ -34,4 +32,3 @@ def set_cached(source_file: str, element: str, data: bytes):
         f_temp.write(data)
 
     shutil.move(temp_path, final_path)
-

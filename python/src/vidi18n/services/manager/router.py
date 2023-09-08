@@ -1,9 +1,8 @@
 from fastapi import HTTPException
 from fastapi.routing import APIRouter
-from vidi18n.services.manager.schemas import GetVideoByUrlRequest, VideoDetails
-from vidi18n.common.redis import get_redis
 from vidi18n.common.cache import get_cache_name
-
+from vidi18n.common.redis import get_redis
+from vidi18n.services.manager.schemas import GetVideoByUrlRequest, VideoDetails
 
 router = APIRouter()
 

@@ -1,4 +1,4 @@
-from vidi18n.common.redis import consume_queue, get_redis, DOWNLOAD_REQUEST_QUEUE
+from vidi18n.common.redis import DOWNLOAD_REQUEST_QUEUE, consume_queue, get_redis
 from vidi18n.services.download.listeners import download_request
 
 
