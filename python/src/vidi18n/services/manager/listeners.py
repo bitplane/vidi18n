@@ -1,6 +1,4 @@
-from redis import Redis
-from vidi18n.common.cache import get_cache_name
+from vidi18n.common.cache import get_cache_key
+from vidi18n.common.redis import get_redis
 
-
-def download_response(redis: Redis, queue, message):
-    print(f"Received message on {queue}: {message}")
+redis = get_redis()

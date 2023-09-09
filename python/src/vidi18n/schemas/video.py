@@ -1,23 +1,35 @@
-from vidi18n.schemas.base import Request, Response
+from datetime import datetime
+from enum import Enum
+
+from vidi18n.schemas.base import Data, subscribable
 
 
-class CreateVideoRequest(Request):
+class JobType(str, Enum):
     """
-    Requests the creation of a new video
-    """
-
-    url: str
-    """
-    The URL where this video lives.
+    The types of jobs that can be run
     """
 
+    DOWNLOAD = "download"
+    """
+    Download the video
+    """
 
-class CreateVideoResponse(Response):
+
+class Video(Data):
     """
-    The response to a CreateVideoRequest
+    Returns the video details
     """
 
-    id: str
-    """
-    The ID of the video
-    """
+    # chunk_count: int
+    # """
+    # The number of chunks in the video
+    # """
+
+    # chunk_size: int
+    # """
+    # The chunk size, in milliseconds
+    # """
+
+    @subscribable
+    def url(self):
+        pass

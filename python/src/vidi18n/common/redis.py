@@ -9,33 +9,26 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
 REDIS_DB = int(os.environ.get("REDIS_DB", 0))
 
 
-DOWNLOAD_REQUEST_QUEUE = "download:request"
-DOWNLOAD_RESPONSE_QUEUE = "download:request"
-
-
 def get_redis():
     return Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
 
-def consume_queue(redis: Redis, queues, callback):
+def listen_for_events(redis: Redis, channels, callback):
     """
-    Calls callback(redis, queue_name, message), consuming messages until
-    callback returns False.
+    Calls callback(redis, channel, message) for each message received on
+    the given channels.
     """
-    keep_processing = True
-    while keep_processing:
-        queue, message = redis.blpop(queues)
-        callback(redis, queue, message)
+    pubsub = redis.pubsub()
+    pubsub.subscribe(channels)
+
+    for message in pubsub.listen():
+        if message["type"] == "message":
+            callback(redis, message["channel"], message["data"])
 
 
-def queue_worker(queue_pattern, callback):
-    """
-    Calls callback(redis, queue_name, message) in a new thread, consuming
-    messages until callback returns False.
-    """
+def queue_worker(subscriptions, callback):
     redis = get_redis()
+    listener = partial(listen_for_events, redis, subscriptions, callback)
+    thread = Thread(target=listener)
 
-    consume = partial(consume_queue, redis, queue_pattern, callback)
-
-    thread = Thread(target=consume)
     return thread.start()

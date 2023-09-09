@@ -3,9 +3,25 @@ from functools import wraps
 from typing import Any
 
 from pydantic import BaseModel
-from vidi18n.common.redis import get_redis
 
-redis = get_redis()
+
+# Mock a Redis client (You'd replace this with a real Redis client)
+class FakeRedis:
+    def __init__(self):
+        self.data = {}
+
+    def get(self, key):
+        return self.data.get(key)
+
+    def set(self, key, value):
+        self.data[key] = value
+
+    def delete(self, key):
+        del self.data[key]
+
+
+# Usage
+redis = FakeRedis()
 
 
 def subscribable(property_func):
@@ -46,14 +62,11 @@ class Data(BaseModel):
         if redis_data != my_data:
             redis.set(f"data:{self.type}:{self.uid}", my_data)
 
-        # save data and publish events
         for key, value in self._event_keys.items():
-            field_key = self.field_key(key, self.uid)
+            field_key = f"data:{self.type}:{self.uid}:event:{key}"
             redis_data = redis.get(field_key)
             if redis_data != value:
-                pubsub_key = self.field_key(key)
                 redis.set(field_key, value)
-                redis.publish(pubsub_key, field_key)
 
     @classmethod
     def load(cls, uid, redis=redis) -> "Data":
@@ -68,12 +81,29 @@ class Data(BaseModel):
         if item:
             redis.delete(f"data:{self.type}:{self.uid}")
             for key in self._event_keys.keys():
-                redis.delete(f"data:{self.type}:event:{key}:{self.uid}")
+                redis.delete(f"data:{self.type}:{self.uid}:event:{key}")
 
-    @classmethod
-    def field_key(cls, key, uid="*"):
-        return f"data:{cls.type}:event:{key}:{uid}"
 
-    @classmethod
-    def key_to_uid(cls, key: str) -> str:
-        return key.split(":")[-1]
+class Special(Data):
+    other_value: str
+
+    @subscribable
+    def magic(self):
+        pass
+
+    @subscribable
+    def magic2(self):
+        pass
+
+
+model = Special(uid="1010101", other_value="cool", magic2="hmm")
+model.magic = "uwot"
+model.save()
+print(model.magic, model.magic2)
+print(redis.data)
+print(model.model_dump_json())
+
+print(Special.load(uid="1010101").model_dump_json())
+
+model.delete()
+print(redis.data)

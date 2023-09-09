@@ -34,6 +34,11 @@ manager = [
     "uvicorn==0.23.2"
 ]
 
+downloader = [
+    "imageio-ffmpeg==0.4.8",
+    "yt-dlp"
+]
+
 
 [build-system]
 build-backend = "flit_core.buildapi"

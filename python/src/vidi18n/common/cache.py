@@ -2,7 +2,7 @@ import hashlib
 import re
 
 
-def get_cache_name(url: str) -> str:
+def get_cache_key(url: str) -> str:
     """
     Given an URL, give a nice safe cache name for it.
     Removes the protocol, replaces special characters with underscores,

@@ -1,7 +1,7 @@
-from vidi18n.schemas.base import Response
+from vidi18n.schemas.base import Data
 
 
-class ChunkUpdateResponse(Response):
+class Chunk(Data):
     """
     A chunk was updated
     """
@@ -9,9 +9,4 @@ class ChunkUpdateResponse(Response):
     video_id: str
     """
     The parent video's id
-    """
-
-    id: int
-    """
-    The index of the chunk
     """
