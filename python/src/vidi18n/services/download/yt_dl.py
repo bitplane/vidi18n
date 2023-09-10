@@ -7,14 +7,13 @@ def get_info(url):
     result = subprocess.run(command, stdout=subprocess.PIPE)
     video_info = json.loads(result.stdout.decode("utf-8"))
 
-    duration = video_info["duration"]
-    formats = {
-        format["format_id"]: {
-            "url": format["url"],
-            "width": format["width"],
-            "height": format["height"],
-        }
-        for format in formats
-    }
+    #    formats = {
+    #        format["format_id"]: {
+    #            "url": format["url"],
+    #            "width": format["width"],
+    #            "height": format["height"],
+    #        }
+    #        for format in formats
+    #    }
 
     return video_info

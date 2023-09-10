@@ -1,20 +1,25 @@
-FROM python:3.10
+FROM python:3.10 as builder
 
 ARG SERVICE_NAME
 ENV SERVICE_NAME=${SERVICE_NAME}
 
-COPY ./pyproject.toml /opt/vidi18n/pyproject.toml
-COPY ./README.md /opt/vidi18n/README.md
-COPY ./src/vidi18n/*.py /opt/vidi18n/src/vidi18n/
-COPY ./src/vidi18n/schemas /opt/vidi18n/src/vidi18n/schemas
-COPY ./src/vidi18n/common /opt/vidi18n/src/vidi18n/common
-COPY ./src/vidi18n/services/*.py /opt/vidi18n/src/vidi18n/services/
-COPY ./src/vidi18n/services/${SERVICE_NAME} /opt/vidi18n/src/vidi18n/services/${SERVICE_NAME}
+COPY ./pyproject.toml /
+COPY ./extract_deps.py /
+RUN pip install toml --no-cache-dir
+RUN python3 extract_deps.py ${SERVICE_NAME}
+RUN pip install -r requirements_${SERVICE_NAME}.txt --no-cache-dir
 
-RUN pip install --no-cache-dir /opt/vidi18n/[${SERVICE_NAME}]
+FROM python:3.10
 
-COPY src /opt/
+COPY ./pyproject.toml /opt/vidi18n/
+
+ARG SERVICE_NAME
+ENV SERVICE_NAME=${SERVICE_NAME}
+
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+
+COPY ./pyproject.toml ./README.md ./src /opt/vidi18n/
 WORKDIR /opt/vidi18n
+RUN pip install --no-cache-dir .
 
-# Run the application
 CMD python -m "vidi18n.services.${SERVICE_NAME}"

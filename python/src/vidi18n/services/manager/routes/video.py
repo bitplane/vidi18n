@@ -22,7 +22,7 @@ async def get_video_by_url(request: GetVideoByUrlRequest):
 
 
 @router.get("/{uid}", response_model=Video)
-async def get_video_by_url(uid: str):
+async def get_video_by_id(uid: str):
     video = Video.load(uid=uid)
 
     if video:

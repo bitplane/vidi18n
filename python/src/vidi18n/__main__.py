@@ -1,9 +1,7 @@
 """
 Main entrypoint for testing.
 """
-from functools import partial
 from multiprocessing import Process
-from pkgutil import get_loader, iter_modules
 
 from vidi18n.services import ALL_PACKAGES
 

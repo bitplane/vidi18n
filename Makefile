@@ -5,6 +5,8 @@
 
 all: dev coverage ## builds everything
 
+dev: install ## install it
+
 install: .venv/.installed ## installs the venv and the project packages
 
 test: .venv/.installed  ## run the project's tests
