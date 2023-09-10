@@ -1,0 +1,19 @@
+yt-dlp --dump-json ...
+
+.duration
+.formats[]
+.formats[].url
+
+# First download the first 10 seconds of the file
+ffmpeg -ss 0 -i "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4" -t 10 -c copy "first_10_seconds.mp4"
+
+# Then we add "processing, please wait" video to the end of the file.
+...
+
+# Then create the index for the init section
+ffmpeg -i first_10_seconds.mp4 -dash 5000 -use_template 1 -use_timeline 1 output.mpd
+
+# Then as new blocks come in we overwrite the mpd file by rendering our jinja2 template
+...
+
+
