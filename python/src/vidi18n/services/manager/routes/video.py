@@ -9,7 +9,7 @@ router = APIRouter()
 redis = get_redis()
 
 
-@router.post("/video/", response_model=Video)
+@router.post("/", response_model=Video)
 async def get_video_by_url(request: GetVideoByUrlRequest):
     uid = get_cache_key(request.url)
     video = Video.load(uid=uid)
@@ -21,7 +21,7 @@ async def get_video_by_url(request: GetVideoByUrlRequest):
     return video
 
 
-@router.get("/video/{uid}", response_model=Video)
+@router.get("/{uid}", response_model=Video)
 async def get_video_by_url(uid: str):
     video = Video.load(uid=uid)
 

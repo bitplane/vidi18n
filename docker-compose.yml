@@ -10,7 +10,8 @@ services:
     image: nginx:latest
     volumes:
       - ./web/conf:/etc/nginx/conf.d
-      - ./web/wwwroot:/usr/share/nginx/html
+      - /tmp/vidi18n/wwwroot:/usr/share/nginx/html
+      - /tmp/vidi18n:/tmp/vidi18n
     ports:
       - "8080:80"
 
@@ -36,8 +37,7 @@ services:
         SERVICE_NAME: download
     environment:
       REDIS_HOST: redis
-    volumes:
-      - /tmp/vidi18n/download:/tmp/vidi18n/download
+      MANAGER_API: "http://manager:8081"
     user: "${UID}:${GID}"
     depends_on:
       - redis

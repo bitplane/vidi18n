@@ -1,8 +1,6 @@
-import json
-import subprocess
-
 from redis import Redis
 from vidi18n.schemas.video import Video
+from vidi18n.services.download.yt_dl import get_info
 
 
 def url_changed(redis: Redis, key: bytes, value: bytes):
@@ -14,22 +12,6 @@ def url_changed(redis: Redis, key: bytes, value: bytes):
     uid = Video.key_to_uid(key.decode())
     url = value.decode()
 
+    video = Video.load(uid=uid)
 
-def get_info(url):
-    command = ["yt-dlp", "--dump-json", url]
-    result = subprocess.run(command, stdout=subprocess.PIPE)
-    video_info = json.loads(result.stdout.decode("utf-8"))
-
-    duration = video_info["duration"]
-    formats = {
-        format["format_id"]: {
-            "url": format["url"],
-            "width": format["width"],
-            "height": format["height"],
-        }
-        for format in formats
-    }
-
-    video_info["formats"]
-
-    return video_info
+    video_info = get_info(url)

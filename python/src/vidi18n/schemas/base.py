@@ -9,11 +9,14 @@ redis = get_redis()
 
 
 def subscribable(property_func):
+    """
+    A subscribable property will publish a message to Redis when it is updated.
+    """
     key_name = property_func.__name__
 
     @wraps(property_func)
     def wrapper(self: "Data"):
-        return self._event_keys.get(key_name)
+        return self._event_keys.get(key_name, property_func(self))
 
     def setter(self: "Data", value):
         self._event_keys[key_name] = value
@@ -22,6 +25,15 @@ def subscribable(property_func):
 
 
 class Data(BaseModel):
+    """
+    Base model for data.
+    * `uid` is the unique identifier for the data type
+    * load it from Redis using ClassName.load(uid)
+    * save it back again with instance.save()
+    * remove it with instance.delete()
+    * Use @subscribable as a decorator
+    """
+
     uid: str
     _event_keys: dict[str, Any] = {}
 

@@ -1,5 +1,6 @@
-import pytest
 from datetime import timedelta
+
+import pytest
 from vidi18n.common.time import timedelta_to_iso8601
 
 
@@ -41,11 +42,19 @@ def test_negative_durations():
 
 def test_fractional_seconds_edge_cases():
     assert timedelta_to_iso8601(timedelta(seconds=10, microseconds=500000)) == "PT10.5S"
-    assert timedelta_to_iso8601(timedelta(seconds=10, microseconds=123456)) == "PT10.123456S"
+    assert (
+        timedelta_to_iso8601(timedelta(seconds=10, microseconds=123456))
+        == "PT10.123456S"
+    )
 
 
 def test_all_units():
-    assert timedelta_to_iso8601(timedelta(days=1, hours=2, minutes=3, seconds=4, milliseconds=500)) == "PT1D2H3M4.5S"
+    assert (
+        timedelta_to_iso8601(
+            timedelta(days=1, hours=2, minutes=3, seconds=4, milliseconds=500)
+        )
+        == "PT1D2H3M4.5S"
+    )
 
 
 def test_large_values():

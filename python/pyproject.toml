@@ -17,7 +17,8 @@ classifiers = [
 
 dependencies = [
     "pydantic==2.3.0",
-    "redis==5.0.0"
+    "redis==5.0.0",
+    "requests==2.31.0"
 ]
 
 [project.optional-dependencies]
@@ -31,12 +32,13 @@ dev = [
 
 manager = [
     "fastapi==0.103.1",
-    "uvicorn==0.23.2"
+    "uvicorn==0.23.2",
+    "python-multipart==0.0.6"
 ]
 
-downloader = [
+download = [
     "imageio-ffmpeg==0.4.8",
-    "yt-dlp"
+    "yt-dlp" # use latest version. also upgrade at runtime!
 ]
 
 
