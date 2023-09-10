@@ -1,5 +1,17 @@
 # vidi18n
 
+Transcribe, translate and caption videos while you watch them.
+
+## Requirements
+
+To run: Docker
+
+To edit: Python 3.10+, make, Docker
+
+## Running
+
 ```bash
-ffmpeg -i video.mkv -c:v libx264 -c:a aac -strict experimental -f dash -min_seg_duration 9000000 -y output/manifest.mpd
+./build/docker.sh
+
+open http://localhost:8000/
 ```
