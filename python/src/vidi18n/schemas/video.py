@@ -40,6 +40,20 @@ class Chunk(Data):
 
 
 class Chunkable(Data):
+    """
+    Describes a stream in a video that's (usually) split into chunks.
+    """
+    source: str
+    """
+    The process that created this chunkable.
+    This is the service name that 
+    """
+
+    language: str
+    """
+    The language code of this chunkable
+    """
+
     bitrate: int
     """
     Bandwidth required in bits per second
@@ -62,14 +76,14 @@ class Chunkable(Data):
         """
         The parent video
         """
-        # our uid is data:parent_uid/track_type/index
-        raise NotImplementedError()
+        return self.uid.split(":")[1]
 
     @property
-    def init_file(self) -> str:
+    def init_file(self) -> str | None:
         """
         The path to the init file for this chunkable
         """
+        return None
 
     @property
     def index(self) -> int:
@@ -134,6 +148,7 @@ class Video(Data):
 
     captions: list[CaptionTrack] = []
     """
+    List of all the caption tracks.
     """
 
     @property

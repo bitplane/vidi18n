@@ -1,9 +1,13 @@
 import json
 from functools import wraps
-from typing import Any
+from typing import Any, Type, TypeVar
 
 from pydantic import BaseModel
 from vidi18n.common.redis import get_redis
+
+
+T = TypeVar("T", bound="Data")
+
 
 redis = get_redis()
 
@@ -68,7 +72,7 @@ class Data(BaseModel):
                 redis.publish(pubsub_key, field_key)
 
     @classmethod
-    def load(cls, uid, redis=redis) -> "Data":
+    def load(cls: Type[T], uid, redis=redis) -> T:
         data = redis.get(f"data:{cls.type}:{uid}")
         if data:
             data_dict = json.loads(data)
