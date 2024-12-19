@@ -26,6 +26,8 @@ update-pre-commit: build/update-pre-commit.sh ## autoupdate pre-commit
 docker: build/docker.sh docker-compose.yml ## build and run docker compose environment
 	build/docker.sh
 
+docs: .docs/index.html ## build the documentation
+
 
 # Caching doesn't work if we depend on PHONY targets
 
@@ -38,6 +40,8 @@ docker: build/docker.sh docker-compose.yml ## build and run docker compose envir
 .git/hooks/pre-commit: build/install-pre-commit.sh
 	build/install-pre-commit.sh
 
+.docs/index.html: .venv/.installed build/docs.sh mkdocs.yml $(shell find -name '*.md')
+	build/docs.sh
 
 help: ## Show this help
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'

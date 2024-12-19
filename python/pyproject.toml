@@ -27,7 +27,10 @@ dev = [
     "pre-commit",
     "pytest",
     "pytest-cov",
-    "coverage"
+    "coverage",
+    "pydoc-markdown",
+    "mkdocs",
+    "mkdocs-material",
 ]
 
 manager = [

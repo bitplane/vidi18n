@@ -1,3 +1,8 @@
+"""
+Downloading service. Listens for video url changes and asynchronously downloads
+available content.
+"""
+
 from vidi18n.common.redis import get_redis, listen_for_events
 from vidi18n.schemas.video import Video
 from vidi18n.services.download.listeners import url_changed

@@ -16,7 +16,6 @@ def url_changed(redis: Redis, key: bytes, value: bytes):
 
     video_info = get_info(url)
 
-    video = int(float(video_info["duration"]) * 1000.0)
-
+    video.duration = int(float(video_info["duration"]) * 1000.0)
 
     #video.save()
