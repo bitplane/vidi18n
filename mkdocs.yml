@@ -18,5 +18,8 @@ markdown_extensions:
   - pymdownx.superfences
 
 nav:
-  - '/': 'index.html'
-  - 'pydoc': 'pydoc.md'
+  - Overview: 'README.md'
+  - MVP plan: 'mvp.md'
+  - Architecture: 'architecture.md'
+  - Development: 'development.md'
+  - Python API: 'pydoc.md'
