@@ -44,8 +44,9 @@ make node
 
 It is historical prototype infrastructure, not yet the MVP described in these
 documents. In particular, it has no complete transcription/translation
-pipeline, and its Redis, downloader, and bind-mounted storage configuration
-should not be exposed to untrusted networks.
+pipeline. Its Redis coordination pattern is intentional, but the prototype's
+Pub/Sub delivery, downloader, and storage configuration should not be exposed
+to untrusted networks.
 
 The current Python test workflow is:
 
@@ -79,13 +80,28 @@ build/podman.sh --detach
 
 - Run services as a non-root user inside rootless containers.
 - Pin image versions; do not use mutable `latest` tags.
-- Store artifacts and database files in user-owned named volumes.
+- Store Redis data and artifacts in user-owned named volumes.
 - Add health checks and bounded startup dependencies.
 - Apply CPU, memory, process, file-size, and job-duration limits.
 - Do not mount the Podman socket into media workers.
 - Do not give media workers access to credentials they do not require.
 - Treat all uploaded or remotely fetched media as hostile.
 - Keep local development and public-node configurations distinct.
+
+## Service development
+
+Services communicate through versioned Redis events and artifact references.
+Do not import another service's implementation to invoke its work directly.
+Shared domain schemas and event envelopes belong in a small common package;
+service-specific processing remains behind its stream contract.
+
+Worker handlers must be safe to run more than once. Tests should cover duplicate
+delivery, interruption before acknowledgement, retry exhaustion, and recovery
+of claimed work in addition to the successful path.
+
+Pub/Sub is appropriate for transient progress notifications. Work which must
+survive a worker restart belongs in a Redis Stream and is acknowledged only
+after its state and output are durable.
 
 ## Documentation
 

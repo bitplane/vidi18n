@@ -35,8 +35,11 @@ The project is guided by these principles:
   unexplained answer.
 - **Progressive playback:** useful results should become available while a
   video is being processed.
+- **Modular execution:** Redis-coordinated workers communicate through durable,
+  versioned events and can scale independently by capability.
 - **Incremental decentralisation:** the first useful implementation can run on
-  one machine, without making a central database part of the permanent design.
+  one machine, without making any single node or network service part of the
+  permanent protocol.
 
 ## MVP
 
@@ -74,9 +77,11 @@ limitations, and the intended developer workflow.
 
 ## Project status
 
-The repository contains an experimental FastAPI manager, Redis events, a
-`yt-dlp` metadata worker, a basic DASH player, and media-processing experiments.
-The end-to-end transcription and translation path has not yet been implemented.
+The repository contains an experimental FastAPI manager, Redis-coordinated
+domain objects and workers, a `yt-dlp` metadata worker, a basic DASH player, and
+media-processing experiments. The service-oriented shape is intentional, but
+durable delivery and the end-to-end transcription and translation path have not
+yet been implemented.
 
 Contributions are most useful when they advance the vertical MVP path rather
 than adding more distributed-system machinery before that path works.

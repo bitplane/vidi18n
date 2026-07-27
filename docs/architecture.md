@@ -10,6 +10,10 @@ and use or mirror it without access to the producer's database.
 The architecture therefore separates media identity, translation artifacts,
 job execution, discovery, and trust.
 
+Within a node, Redis coordinates independently deployable services. Between
+nodes, portable manifests and artifacts provide interoperability. Redis is not
+the federation protocol, but it is a deliberate part of the node architecture.
+
 ## Conceptual flow
 
 ```text
@@ -89,8 +93,9 @@ requiring a new translation format.
 A job describes requested work; an artifact records completed work. These are
 not the same object.
 
-The MVP can keep jobs in a local database or queue. Workers should consume
-small, idempotent steps:
+Redis is the coordination backbone inside a vidi18n node. It holds active domain
+state, carries work between services, and supports transient progress
+notifications. Workers consume small, idempotent steps:
 
 1. ingest;
 2. audio extraction;
@@ -104,8 +109,59 @@ Each step receives immutable inputs and creates immutable outputs. Re-running a
 step should either return the existing artifact or create an explicitly
 different version. This model prepares jobs for execution by other nodes later.
 
-Redis may be useful as a local queue, but Redis keys and pub/sub messages are
-implementation details and must not become the network protocol.
+The original prototype uses Redis Pub/Sub to react to changes in domain
+properties. That establishes useful service boundaries, but Pub/Sub alone is
+not a durable work queue: a disconnected worker can miss a message, and there
+is no acknowledgement or recovery of abandoned work.
+
+The intended division of responsibility is:
+
+| Concern | Redis mechanism |
+| --- | --- |
+| Current domain and job state | Redis keys, hashes, or JSON |
+| Durable work delivery | Redis Streams and consumer groups |
+| Transient progress for connected clients | Redis Pub/Sub |
+
+Domain changes should produce explicit, versioned events such as
+`video.ingest.requested` or `chunk.translation.requested`. Property decorators
+may provide a convenient API for producing events, but Redis key names and
+Python property names must not accidentally become permanent message schemas.
+
+Work delivery is at least once. Every consumer must therefore be idempotent.
+Messages contain identifiers, hashes, time ranges, and configuration—not video,
+audio, or other large payloads. A worker acknowledges a stream entry only after
+its output has been stored and the corresponding state transition is durable.
+
+Updating state and appending its event must be atomic, using a Redis transaction,
+Lua script, or an outbox drained by a dispatcher. Jobs expose an explicit
+lifecycle and enough information to recover work:
+
+```text
+requested -> claimed -> running -> completed
+                         |  |
+                         |  +-> failed
+                         +----> retryable
+```
+
+The precise Redis representation is internal to a node. It must not become the
+protocol used for federation between independently operated nodes.
+
+### Service boundaries
+
+The pipeline is divided by capability rather than by individual model or file
+operation:
+
+- **manager:** owns the public API, desired state, and job/status views;
+- **ingest:** obtains or accepts media and records its identity;
+- **transcribe:** extracts speech and creates timed source-language segments;
+- **translate:** creates target-language segments from source segments;
+- **package:** assembles WebVTT, manifests, and later playable media tracks; and
+- **artifact store:** persists large immutable inputs and outputs outside Redis.
+
+The MVP may run one instance of each worker, or combine several worker
+capabilities in one development process. Their stream contracts remain
+separate, allowing an operator to scale a bottleneck horizontally without
+redesigning the pipeline.
 
 ### Discovery
 
@@ -153,16 +209,19 @@ to publish its fingerprint, transcript, title, source URL, or derived media.
 The first node consists of:
 
 - an HTTP API and lightweight web application;
-- a durable relational database for jobs and metadata;
+- Redis for domain state, durable work streams, and progress events;
 - a filesystem or S3-compatible artifact store;
-- one local worker process;
+- independently scalable ingest, transcription, translation, and packaging
+  workers;
 - FFmpeg for media operations;
 - configurable transcription and translation adapters; and
 - a rootless OCI container deployment using Podman.
 
-A queue can be added when a single worker process becomes an actual bottleneck.
-The MVP should avoid splitting each step into a separately deployed service:
-that would increase operational complexity without proving community reuse.
+The development deployment starts one instance of each required service.
+Operators can later add worker instances for a particular stream without
+changing the message or artifact formats. A shared worker image may select its
+capability through configuration, keeping image maintenance simple while
+preserving process boundaries.
 
 ## Evolution
 

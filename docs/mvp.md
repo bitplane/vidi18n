@@ -57,33 +57,48 @@ exporting, and reusing a translated caption track.
 
 ## Proposed implementation shape
 
-Use a modular monolith for the MVP:
+Preserve the event-driven service boundaries established by the prototype:
 
 ```text
 vidi18n node
-├── API and web UI
-├── job coordinator
-├── media pipeline
-│   ├── FFmpeg adapter
-│   ├── transcription adapter
-│   └── translation adapter
-├── metadata database
-└── content-addressed artifact directory
+├── manager
+│   └── API, web UI, desired state, and progress
+├── Redis
+│   ├── domain and job state
+│   ├── durable work streams
+│   └── transient progress notifications
+├── workers
+│   ├── ingest
+│   ├── transcribe
+│   ├── translate
+│   └── package
+└── content-addressed artifact store
 ```
 
-Start with one process for the API and one worker process. Keep adapter
+Start with one instance of each required service. A development entry point may
+run multiple worker capabilities together, but each capability consumes a
+separate, versioned event contract so it can be deployed and scaled
+independently.
+
+Use Redis Streams and consumer groups for durable work, acknowledgements,
+retries, and horizontal consumers. Retain Pub/Sub for ephemeral progress where
+missed messages can be recovered by reading current state. Keep adapter
 interfaces independent of particular AI providers so a node can use local
 models, hosted APIs, or community workers later.
 
-SQLite is sufficient for a single-node MVP if jobs are claimed transactionally.
-PostgreSQL can be supported when multi-host coordination is needed. Store large
-artifacts outside the database.
+Redis stores coordination data, not media payloads. Audio, transcripts,
+translations, captions, and manifests live in the artifact store and are
+referenced by identifiers and content hashes.
 
 ## Milestones
 
 ### 0. Make the skeleton trustworthy
 
-- Replace the prototype data model with explicit job and artifact models.
+- Repair and evolve the prototype data model without discarding its
+  event-driven service boundaries.
+- Define versioned domain events and move durable work from Pub/Sub to Redis
+  Streams.
+- Add explicit job lifecycle, acknowledgement, retry, and recovery behaviour.
 - Add configuration, structured logging, and error reporting.
 - Establish a rootless Podman development environment.
 - Add CI for formatting, types, unit tests, and the end-to-end fixture.
@@ -153,6 +168,8 @@ protocol prematurely:
 - local transcription model versus hosted default;
 - segment duration and overlap;
 - source transcript representation beneath WebVTT;
-- SQLite queue versus a dedicated broker;
+- Redis state representation and stream naming;
+- transaction, Lua, or outbox-based atomic event publication;
+- whether development combines worker capabilities into one process;
 - signature scheme and canonical JSON rules; and
 - exact semantics of public artifact withdrawal and tombstones.
