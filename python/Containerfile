@@ -2,16 +2,22 @@ FROM docker.io/library/python:3.10-slim AS builder
 
 ARG SERVICE_NAME
 ENV SERVICE_NAME=${SERVICE_NAME}
+ARG DEPENDENCY_GROUP
 
 COPY ./pyproject.toml /
 COPY ./extract_deps.py /
 RUN pip install --no-cache-dir toml \
-    && python3 extract_deps.py "${SERVICE_NAME}" \
-    && pip install --no-cache-dir -r "requirements_${SERVICE_NAME}.txt"
+    && dependency_group="${DEPENDENCY_GROUP:-${SERVICE_NAME}}" \
+    && python3 extract_deps.py "${dependency_group}" \
+    && pip install --no-cache-dir -r "requirements_${dependency_group}.txt"
 
 FROM docker.io/library/python:3.10-slim
 
 COPY ./pyproject.toml /opt/vidi18n/
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG SERVICE_NAME
 ENV SERVICE_NAME=${SERVICE_NAME}

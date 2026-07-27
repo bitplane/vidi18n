@@ -46,7 +46,7 @@ class Chunkable(Data):
     source: str
     """
     The process that created this chunkable.
-    This is the service name that 
+    This is the service name that
     """
 
     language: str

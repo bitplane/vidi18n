@@ -1,16 +1,116 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Vidi18n</title>
-  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>vidi18n</title>
+  <style>
+    body { font: 16px system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    form { display: flex; gap: .5rem; margin-bottom: 1rem; }
+    input { flex: 1; padding: .65rem; }
+    button { padding: .65rem 1rem; }
+    video { width: 100%; background: #111; }
+    #status { min-height: 1.5rem; }
+  </style>
 </head>
 <body>
-  <video id="videoPlayer" controls width="640" height="360"></video>
+  <h1>vidi18n</h1>
+  <p>Watch community-owned translation appear while a video is processed.</p>
+  <form id="video-form">
+    <input id="url" type="url" required placeholder="https://…">
+    <button type="submit">Translate English → French</button>
+  </form>
+  <p id="status">Enter a video URL to begin.</p>
+  <video id="player" controls></video>
 
   <script>
-    var url = '/output/manifest.mpd';
-    var player = dashjs.MediaPlayer().create();
-    player.initialize(document.querySelector("#videoPlayer"), url, true);
+    const form = document.querySelector("#video-form");
+    const player = document.querySelector("#player");
+    const status = document.querySelector("#status");
+    let track;
+    let eventSource;
+    let started = false;
+
+    const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      started = false;
+      player.pause();
+      player.removeAttribute("src");
+      if (eventSource) eventSource.close();
+      track = player.addTextTrack("subtitles", "Français", "fr");
+      track.mode = "showing";
+      status.textContent = "Resolving media…";
+
+      const response = await fetch("/api/video/", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          url: document.querySelector("#url").value,
+          source_language: "en",
+          target_language: "fr"
+        })
+      });
+      if (!response.ok) {
+        status.textContent = `Request failed: ${await response.text()}`;
+        return;
+      }
+      const created = await response.json();
+      connectCaptions(created.caption_events_url);
+      monitor(created.video_id);
+    });
+
+    function connectCaptions(url) {
+      eventSource = new EventSource(url);
+      eventSource.addEventListener("cue", event => {
+        const cue = JSON.parse(event.data);
+        for (const existing of [...track.cues]) {
+          if (existing.id === cue.segment_id) track.removeCue(existing);
+        }
+        const item = new VTTCue(cue.start_ms / 1000, cue.end_ms / 1000, cue.text);
+        item.id = cue.segment_id;
+        track.addCue(item);
+      });
+      eventSource.onerror = () => {
+        status.textContent = "Caption connection interrupted; reconnecting…";
+      };
+    }
+
+    async function monitor(videoId) {
+      let mediaReady = false;
+      while (true) {
+        const response = await fetch(`/api/video/${videoId}`);
+        const video = await response.json();
+        if (video.job.error) {
+          status.textContent = `Processing failed: ${video.job.error}`;
+          return;
+        }
+        if (!mediaReady && video.resolved_source) {
+          player.src = video.media_url;
+          mediaReady = true;
+        }
+        const lead = Math.max(0, video.translated_through_ms - player.currentTime * 1000);
+        status.textContent =
+          `${video.job.stage}: translated through ${(video.translated_through_ms / 1000).toFixed(0)}s ` +
+          `(${(lead / 1000).toFixed(0)}s ahead)`;
+
+        const threshold = Math.min(20000, video.duration_ms || 20000);
+        if (!started && mediaReady && video.translated_through_ms >= threshold) {
+          started = true;
+          try {
+            await player.play();
+          } catch (_) {
+            status.textContent += " — ready; press play";
+          }
+        }
+        if (video.status === "completed") {
+          status.textContent = "Translation complete.";
+          return;
+        }
+        await wait(1000);
+      }
+    }
   </script>
 </body>
 </html>

@@ -21,6 +21,8 @@ services:
         read_only: true
     ports:
       - "8080:80"
+    depends_on:
+      - manager
 
   manager:
     build:
@@ -52,7 +54,82 @@ services:
       - redis
       - manager
 
+  transcribe:
+    build:
+      context: ./python
+      dockerfile: Containerfile
+      args:
+        SERVICE_NAME: transcribe
+        DEPENDENCY_GROUP: worker
+    environment:
+      REDIS_HOST: redis
+      VIDI18N_PROCESSOR_MODE: "${VIDI18N_PROCESSOR_MODE:-deterministic}"
+      VIDI18N_MODEL_ROOT: /models
+    volumes:
+      - artifacts:/tmp/vidi18n
+      - models:/models
+    depends_on:
+      - redis
+      - download
+
+  translate:
+    build:
+      context: ./python
+      dockerfile: Containerfile
+      args:
+        SERVICE_NAME: translate
+        DEPENDENCY_GROUP: worker
+    environment:
+      REDIS_HOST: redis
+      VIDI18N_PROCESSOR_MODE: "${VIDI18N_PROCESSOR_MODE:-deterministic}"
+      VIDI18N_MODEL_ROOT: /models
+      ARGOS_PACKAGES_DIR: /models/argos
+    volumes:
+      - artifacts:/tmp/vidi18n
+      - models:/models
+    depends_on:
+      - redis
+      - transcribe
+
+  package:
+    build:
+      context: ./python
+      dockerfile: Containerfile
+      args:
+        SERVICE_NAME: package
+    environment:
+      REDIS_HOST: redis
+    volumes:
+      - artifacts:/tmp/vidi18n
+    depends_on:
+      - redis
+      - translate
+
+  models:
+    profiles: ["models"]
+    build:
+      context: ./python
+      dockerfile: Containerfile
+      args:
+        SERVICE_NAME: models
+        DEPENDENCY_GROUP: "transcribe,translate"
+    command: ["python", "-m", "vidi18n.models", "bootstrap"]
+    environment:
+      VIDI18N_MODEL_ROOT: /models
+      ARGOS_PACKAGES_DIR: /models/argos
+    volumes:
+      - models:/models
+
+  fixture:
+    profiles: ["test"]
+    build:
+      context: ./test/fixture
+      dockerfile: Containerfile
+    ports:
+      - "8090:80"
+
 
 volumes:
   artifacts:
+  models:
   redis-data:

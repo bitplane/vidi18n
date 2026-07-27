@@ -1,0 +1,10 @@
+services:
+  download:
+    environment:
+      VIDI18N_ALLOW_PRIVATE_URLS: "1"
+  transcribe:
+    environment:
+      VIDI18N_PROCESSOR_MODE: deterministic
+  translate:
+    environment:
+      VIDI18N_PROCESSOR_MODE: deterministic

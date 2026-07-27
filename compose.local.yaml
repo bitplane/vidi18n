@@ -1,0 +1,15 @@
+services:
+  transcribe:
+    build:
+      args:
+        SERVICE_NAME: transcribe
+        DEPENDENCY_GROUP: transcribe
+    environment:
+      VIDI18N_PROCESSOR_MODE: local
+  translate:
+    build:
+      args:
+        SERVICE_NAME: translate
+        DEPENDENCY_GROUP: translate
+    environment:
+      VIDI18N_PROCESSOR_MODE: local

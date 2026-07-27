@@ -13,7 +13,8 @@ The long-term experience is simple:
 > immediately. If not, produce the missing translation and optionally share it
 > for the next viewer.
 
-This repository is currently an early prototype, not a working release.
+This repository is an early prototype with a runnable progressive-caption
+vertical slice, not a production release.
 
 ## Why vidi18n?
 
@@ -56,32 +57,50 @@ The first milestone is deliberately subtitle-only:
 Voice cloning, dubbed audio, lip synchronisation, arbitrary website support,
 federation, incentives, and P2P execution are not required for the MVP.
 
-See the [MVP plan](../docs/mvp.md) and
-[architecture](../docs/architecture.md) for the proposed path.
+See the
+[MVP plan](https://github.com/bitplane/vidi18n/blob/master/docs/mvp.md) and
+[architecture](https://github.com/bitplane/vidi18n/blob/master/docs/architecture.md)
+for the proposed path.
 
-## Running the prototype
+## Running the progressive slice
 
-The checked-in application is incomplete. Rootless Podman is the preferred
-runtime:
+Rootless Podman is the preferred runtime. The default node uses deterministic
+English-to-French processing adapters, allowing the complete pipeline to run
+without downloading ML models:
 
 ```bash
 make node
 ```
 
 `podman compose` requires a Compose provider to be installed. The current
-Compose file describes the historical prototype and should not yet be treated
-as a production or secure community-node deployment.
+deployment should not be exposed as a production or secure community node.
 
-See [development](../docs/development.md) for prerequisites, current
-limitations, and the intended developer workflow.
+Run the isolated end-to-end check with:
+
+```bash
+make test-integration
+```
+
+Real local `faster-whisper` and Argos Translate adapters are available through
+the opt-in model bootstrap described in the development guide.
+
+See
+[development](https://github.com/bitplane/vidi18n/blob/master/docs/development.md)
+for prerequisites, current limitations, and the intended developer workflow.
 
 ## Project status
 
-The repository contains an experimental FastAPI manager, Redis-coordinated
-domain objects and workers, a `yt-dlp` metadata worker, a basic DASH player, and
-media-processing experiments. The service-oriented shape is intentional, but
-durable delivery and the end-to-end transcription and translation path have not
-yet been implemented.
+The first URL-based English-to-French slice now resolves a playable source,
+proxies HTTP range requests, extracts ten-second audio chunks, and sends them
+through independent download, transcription, translation, and packaging
+workers. Redis Streams provide durable work delivery. Translated cues are
+replayable over SSE while processing continues, and an incrementally updated
+WebVTT track becomes the final artifact.
+
+The default adapters produce deterministic fixture text; they prove timing,
+delivery, recovery, playback, and packaging rather than model quality. Uploads,
+portable manifests, identity matching, hardening, observability, worker
+recovery after a consumer dies, and community-node exchange remain MVP work.
 
 Contributions are most useful when they advance the vertical MVP path rather
 than adding more distributed-system machinery before that path works.

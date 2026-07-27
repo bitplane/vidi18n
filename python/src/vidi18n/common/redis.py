@@ -10,7 +10,13 @@ REDIS_DB = int(os.environ.get("REDIS_DB", 0))
 
 
 def get_redis():
-    return Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+    return Redis(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        db=REDIS_DB,
+        socket_connect_timeout=2,
+        socket_timeout=20,
+    )
 
 
 def listen_for_events(redis: Redis, channels, callback):

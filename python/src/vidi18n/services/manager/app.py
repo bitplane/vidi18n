@@ -6,3 +6,8 @@ app = FastAPI()
 
 app.include_router(video_router, prefix="/video", tags=["video"])
 app.include_router(file_router, prefix="/file", tags=["file"])
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}

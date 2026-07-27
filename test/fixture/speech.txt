@@ -1,0 +1,12 @@
+Hello and welcome to vidi eighteen n.
+This is a community owned video translation test.
+The first section checks that captions arrive while the video is still processing.
+The second section gives the translation worker more useful English speech.
+People should be able to understand videos without depending on one large platform.
+Each ten second section moves independently through the processing network.
+Redis carries durable work between the download transcription translation and packaging workers.
+The browser receives translated captions while later sections are still being processed.
+If the connection closes it can reconnect and recover every caption it missed.
+At the end the node creates a portable Web V T T subtitle file.
+That file can eventually be shared with another community operated node.
+This final sentence marks the end of the progressive translation fixture.

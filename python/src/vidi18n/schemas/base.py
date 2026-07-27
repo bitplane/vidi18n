@@ -45,7 +45,7 @@ class Data(BaseModel):
         super().__init__(**kwargs)
         for key, value in kwargs.items():
             field = self.__class__.__dict__.get(key)
-            is_prop = type(field) == property
+            is_prop = isinstance(field, property)
             if is_prop and hasattr(field, "setter"):
                 setattr(self, key, value)
 

@@ -2,4 +2,4 @@
 
 set -e
 
-exec podman compose --file compose.yaml up --build "$@"
+exec build/podman-compose.sh up --build "$@"

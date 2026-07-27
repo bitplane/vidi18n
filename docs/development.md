@@ -34,7 +34,7 @@ podman compose version
 Podman's `compose` command delegates to an installed Compose provider. Consult
 the Podman documentation if the second command reports that none is installed.
 
-## Current prototype
+## Current progressive slice
 
 The existing Compose application can be invoked with:
 
@@ -42,17 +42,33 @@ The existing Compose application can be invoked with:
 make node
 ```
 
-It is historical prototype infrastructure, not yet the MVP described in these
-documents. In particular, it has no complete transcription/translation
-pipeline. Its Redis coordination pattern is intentional, but the prototype's
-Pub/Sub delivery, downloader, and storage configuration should not be exposed
-to untrusted networks.
+This starts the URL-based English-to-French vertical slice. The manager queues
+work in Redis Streams; separate workers resolve and chunk the video, transcribe,
+translate, and package it; the browser receives replayable cues over SSE while
+the video remains playable through an HTTP range proxy. It is development
+infrastructure and must not be exposed to untrusted networks.
 
 The current Python test workflow is:
 
 ```bash
 make install
 make test
+make test-integration
+```
+
+The integration target builds an isolated Podman project, generates and serves
+a local spoken-video fixture, exercises URL resolution and byte-range playback,
+checks that an SSE caption arrives before the job finishes, reconnects the cue
+stream, and verifies the completed WebVTT artifact. It removes its containers
+and volumes when finished.
+
+The default node uses deterministic transcription and translation adapters so
+the pipeline can be exercised without model downloads. To use the first local
+English-to-French adapters:
+
+```bash
+make models
+make node-local
 ```
 
 ## Intended workflow
@@ -66,8 +82,8 @@ make node
 make clean
 ```
 
-`make node` should start the rootless Podman development deployment. Tests
-should run directly in the Python virtual environment by default so that
+`make node` starts the rootless Podman development deployment. Tests run
+directly in the Python virtual environment by default so that
 contributors do not need to rebuild containers for every change.
 
 To pass additional options to Compose, invoke the helper directly:

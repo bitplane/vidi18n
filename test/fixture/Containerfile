@@ -1,0 +1,18 @@
+FROM docker.io/library/debian:bookworm-slim AS builder
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends espeak-ng ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY speech.txt /srv/speech.txt
+RUN espeak-ng -s 135 -f /srv/speech.txt -w /srv/speech.wav \
+    && ffmpeg -loglevel error \
+        -f lavfi -i color=c=0x172033:s=640x360:r=25 \
+        -i /srv/speech.wav -shortest \
+        -c:v libx264 -pix_fmt yuv420p -c:a aac -movflags +faststart \
+        /srv/speech.mp4 \
+    && rm /srv/speech.wav
+
+FROM docker.io/library/nginx:1-alpine
+
+COPY --from=builder /srv/speech.mp4 /usr/share/nginx/html/speech.mp4

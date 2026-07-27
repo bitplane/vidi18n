@@ -1,5 +1,5 @@
 # the things that don't have output files or run every time
-.PHONY: help all install test dev coverage clean node podman \
+.PHONY: help all install test test-integration dev coverage clean node node-local podman models \
 		pre-commit update-pre-commit
 
 
@@ -11,6 +11,9 @@ install: .venv/.installed ## installs the venv and the project packages
 
 test: .venv/.installed  ## run the project's tests
 	build/test.sh
+
+test-integration: .venv/.installed ## run the progressive Podman integration test
+	build/test-integration.sh
 
 coverage: .venv/.installed build/coverage.sh  ## build the html coverage report
 	build/coverage.sh
@@ -26,7 +29,13 @@ update-pre-commit: build/update-pre-commit.sh ## autoupdate pre-commit
 node: build/podman.sh compose.yaml ## build and run the rootless node
 	build/podman.sh
 
+node-local: build/podman-local.sh compose.yaml compose.local.yaml ## run with local models
+	build/podman-local.sh
+
 podman: node ## alias for the node target
+
+models: compose.yaml ## download local processing models into the Podman volume
+	build/podman-compose.sh --profile models run --rm models
 
 docs: .docs/index.html ## build the documentation
 

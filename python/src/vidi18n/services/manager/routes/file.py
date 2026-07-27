@@ -23,7 +23,7 @@ def validate_path(path: str) -> str:
     return real_path
 
 
-@router.put("/{param:path}", name="path-convertor")
+@router.put("/{path:path}", name="path-convertor")
 async def upload_file(path: str, upload: UploadFile) -> None:
     """
     Save the file to disk
@@ -38,7 +38,7 @@ async def upload_file(path: str, upload: UploadFile) -> None:
         shutil.move(tmp_path, path)
 
 
-@router.get("/{param:path}", name="path-convertor")
+@router.get("/{path:path}", name="path-convertor")
 async def get_file(path: str) -> bytes:
     path = validate_path(path)
 

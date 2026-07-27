@@ -1,16 +1,10 @@
-"""
-Downloading service. Listens for video url changes and asynchronously downloads
-available content.
-"""
-
-from vidi18n.common.redis import get_redis, listen_for_events
-from vidi18n.schemas.video import Video
-from vidi18n.services.download.listeners import url_changed
+from vidi18n.common.settings import STREAM_DOWNLOAD
+from vidi18n.common.workflow import run_worker
+from vidi18n.services.download.listeners import download_requested
 
 
 def main():
-    redis = get_redis()
-    listen_for_events(redis, Video.field_key("url"), url_changed)
+    run_worker(STREAM_DOWNLOAD, "download", download_requested)
 
 
 if __name__ == "__main__":
