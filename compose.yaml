@@ -1,0 +1,58 @@
+services:
+  redis:
+    image: docker.io/library/redis:7-alpine
+    volumes:
+      - redis-data:/data
+
+  nginx:
+    image: docker.io/library/nginx:1-alpine
+    volumes:
+      - type: bind
+        source: ./web/conf
+        target: /etc/nginx/conf.d
+        read_only: true
+      - type: bind
+        source: ./web/wwwroot
+        target: /usr/share/nginx/html
+        read_only: true
+      - type: volume
+        source: artifacts
+        target: /usr/share/nginx/html/output
+        read_only: true
+    ports:
+      - "8080:80"
+
+  manager:
+    build:
+      context: ./python
+      dockerfile: Containerfile
+      args:
+        SERVICE_NAME: manager
+    environment:
+      REDIS_HOST: redis
+    ports:
+      - "8081:8081"
+    volumes:
+      - artifacts:/tmp/vidi18n
+    depends_on:
+      - redis
+
+  download:
+    build:
+      context: ./python
+      dockerfile: Containerfile
+      args:
+        SERVICE_NAME: download
+    environment:
+      REDIS_HOST: redis
+      MANAGER_API: "http://manager:8081"
+    volumes:
+      - artifacts:/tmp/vidi18n
+    depends_on:
+      - redis
+      - manager
+
+
+volumes:
+  artifacts:
+  redis-data:

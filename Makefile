@@ -1,5 +1,5 @@
 # the things that don't have output files or run every time
-.PHONY: help all install test dev coverage clean \
+.PHONY: help all install test dev coverage clean node podman \
 		pre-commit update-pre-commit
 
 
@@ -23,8 +23,10 @@ pre-commit: .git/hooks/pre-commit ## install pre-commit into the git repo
 update-pre-commit: build/update-pre-commit.sh ## autoupdate pre-commit
 	build/update-pre-commit.sh
 
-docker: build/docker.sh docker-compose.yml ## build and run docker compose environment
-	build/docker.sh
+node: build/podman.sh compose.yaml ## build and run the rootless node
+	build/podman.sh
+
+podman: node ## alias for the node target
 
 docs: .docs/index.html ## build the documentation
 

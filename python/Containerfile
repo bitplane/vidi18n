@@ -1,0 +1,26 @@
+FROM docker.io/library/python:3.10-slim AS builder
+
+ARG SERVICE_NAME
+ENV SERVICE_NAME=${SERVICE_NAME}
+
+COPY ./pyproject.toml /
+COPY ./extract_deps.py /
+RUN pip install --no-cache-dir toml \
+    && python3 extract_deps.py "${SERVICE_NAME}" \
+    && pip install --no-cache-dir -r "requirements_${SERVICE_NAME}.txt"
+
+FROM docker.io/library/python:3.10-slim
+
+COPY ./pyproject.toml /opt/vidi18n/
+
+ARG SERVICE_NAME
+ENV SERVICE_NAME=${SERVICE_NAME}
+
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+
+COPY ./pyproject.toml ./README.md /opt/vidi18n/
+COPY ./src /opt/vidi18n/src
+WORKDIR /opt/vidi18n
+RUN pip install --no-cache-dir .
+
+CMD ["sh", "-c", "exec python -m \"vidi18n.services.${SERVICE_NAME}\""]

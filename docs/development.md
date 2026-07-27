@@ -39,7 +39,7 @@ the Podman documentation if the second command reports that none is installed.
 The existing Compose application can be invoked with:
 
 ```bash
-podman compose up --build
+make node
 ```
 
 It is historical prototype infrastructure, not yet the MVP described in these
@@ -56,7 +56,7 @@ make test
 
 ## Intended workflow
 
-The MVP should provide these stable entry points:
+The stable development entry points are:
 
 ```bash
 make install
@@ -68,6 +68,12 @@ make clean
 `make node` should start the rootless Podman development deployment. Tests
 should run directly in the Python virtual environment by default so that
 contributors do not need to rebuild containers for every change.
+
+To pass additional options to Compose, invoke the helper directly:
+
+```bash
+build/podman.sh --detach
+```
 
 ## Container guidelines
 

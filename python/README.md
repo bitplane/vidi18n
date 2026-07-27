@@ -58,11 +58,11 @@ See the [MVP plan](../docs/mvp.md) and
 
 ## Running the prototype
 
-The checked-in application is incomplete and its container setup is being
-migrated. Rootless Podman is the preferred runtime:
+The checked-in application is incomplete. Rootless Podman is the preferred
+runtime:
 
 ```bash
-podman compose up --build
+make node
 ```
 
 `podman compose` requires a Compose provider to be installed. The current
