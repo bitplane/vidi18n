@@ -1,4 +1,4 @@
-from vidi18n.schemas.workflow import CaptionCue, Event
+from vidi18n.schemas.workflow import CaptionCue, Event, ProcessorRef
 
 
 def test_event_round_trip():
@@ -26,3 +26,24 @@ def test_caption_cue_defaults_to_first_revision():
         language="fr",
     )
     assert cue.revision == 1
+
+
+def test_event_carries_processor_provenance():
+    processor = ProcessorRef(
+        stage="transcribe",
+        engine="faster-whisper",
+        engine_version="1.2.0",
+        mode="local",
+        model="tiny.en",
+        compute_type="int8",
+    )
+    event = Event(
+        event_type="transcription.chunk.completed",
+        job_id="job",
+        video_id="video",
+        processors=[processor],
+    )
+
+    restored = Event.model_validate_json(event.model_dump_json())
+
+    assert restored.processors == [processor]

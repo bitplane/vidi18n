@@ -1,5 +1,7 @@
 # the things that don't have output files or run every time
-.PHONY: help all install test test-integration dev coverage clean node node-local podman models \
+.PHONY: help all install test test-integration test-model-cpu test-model-gpu \
+		benchmark-model-cpu benchmark-model-gpu dev coverage clean node node-local \
+		podman models models-verify \
 		pre-commit update-pre-commit
 
 
@@ -14,6 +16,16 @@ test: .venv/.installed  ## run the project's tests
 
 test-integration: .venv/.installed ## run the progressive Podman integration test
 	build/test-integration.sh
+
+test-model-cpu: .venv/.installed models ## validate real models on CPU
+	build/test-model.sh cpu
+
+test-model-gpu: .venv/.installed models ## validate real models on NVIDIA GPU
+	build/test-model.sh gpu
+
+benchmark-model-cpu: test-model-cpu ## benchmark real models on CPU
+
+benchmark-model-gpu: test-model-gpu ## benchmark real models on NVIDIA GPU
 
 coverage: .venv/.installed build/coverage.sh  ## build the html coverage report
 	build/coverage.sh
@@ -35,7 +47,11 @@ node-local: build/podman-local.sh compose.yaml compose.local.yaml ## run with lo
 podman: node ## alias for the node target
 
 models: compose.yaml ## download local processing models into the Podman volume
-	build/podman-compose.sh --profile models run --rm models
+	build/podman-compose.sh --profile models run --build --rm models
+
+models-verify: compose.yaml ## verify installed local models without downloads
+	build/podman-compose.sh --profile models run --build --rm models \
+		python -m vidi18n.models verify
 
 docs: .docs/index.html ## build the documentation
 

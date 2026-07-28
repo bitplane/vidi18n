@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from redis import Redis
 
 from vidi18n.common.artifacts import artifacts
+from vidi18n.common.metrics import mark_once
 from vidi18n.common.settings import CHUNK_SECONDS, STREAM_TRANSCRIBE, job_key, video_key
 from vidi18n.common.workflow import enqueue, get_job, get_video, save_json
 from vidi18n.schemas.workflow import Event
@@ -126,6 +127,7 @@ def download_requested(redis: Redis, event: Event):
     )
     save_json(redis, video_key(event.video_id), video)
     save_json(redis, job_key(event.job_id), job)
+    mark_once(redis, event.job_id, "media_ready_at")
 
     with tempfile.TemporaryDirectory(dir=artifacts.root) as temporary:
         for index in range(total_chunks):

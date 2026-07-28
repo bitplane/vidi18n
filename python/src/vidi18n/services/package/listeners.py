@@ -6,7 +6,14 @@ from pathlib import Path
 from redis import Redis
 
 from vidi18n.common.artifacts import artifacts
-from vidi18n.common.settings import DATA_ROOT, caption_stream, job_key, video_key
+from vidi18n.common.metrics import redis_now
+from vidi18n.common.settings import (
+    DATA_ROOT,
+    caption_stream,
+    job_key,
+    metrics_key,
+    video_key,
+)
 from vidi18n.common.workflow import get_job, get_video
 from vidi18n.schemas.workflow import CaptionCue, Event
 
@@ -75,6 +82,8 @@ def package_chunk(redis: Redis, event: Event):
     video["translated_through_ms"] = min(
         frontier * video["chunk_duration_ms"], video["duration_ms"]
     )
+    processor_data = [processor.model_dump() for processor in event.processors]
+    video["processors"] = processor_data
 
     caption_dir = Path(DATA_ROOT) / event.video_id / "captions"
     caption_dir.mkdir(parents=True, exist_ok=True)
@@ -100,9 +109,21 @@ def package_chunk(redis: Redis, event: Event):
         )
 
     stream = caption_stream(event.video_id, event.target_language)
+    event_time, _ = redis_now(redis)
     with redis.pipeline(transaction=True) as pipe:
         pipe.set(video_key(event.video_id), json.dumps(video))
         pipe.set(job_key(event.job_id), json.dumps(job))
+        pipe.hset(
+            metrics_key(event.job_id),
+            "processors",
+            json.dumps(processor_data, separators=(",", ":"), sort_keys=True),
+        )
+        if new_cues:
+            pipe.hsetnx(
+                metrics_key(event.job_id), "first_caption_at", event_time
+            )
+        if complete:
+            pipe.hsetnx(metrics_key(event.job_id), "completed_at", event_time)
         for cue in new_cues:
             pipe.xadd(stream, {"cue": json.dumps(cue, separators=(",", ":"))})
         pipe.execute()

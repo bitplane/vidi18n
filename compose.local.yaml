@@ -6,6 +6,9 @@ services:
         DEPENDENCY_GROUP: transcribe
     environment:
       VIDI18N_PROCESSOR_MODE: local
+      VIDI18N_WHISPER_DEVICE: cpu
+      VIDI18N_WHISPER_COMPUTE_TYPE: int8
+      VIDI18N_WHISPER_CPU_THREADS: "${VIDI18N_WHISPER_CPU_THREADS:-4}"
   translate:
     build:
       args:

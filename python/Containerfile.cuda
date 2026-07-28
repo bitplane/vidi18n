@@ -1,0 +1,30 @@
+FROM docker.io/library/python:3.10-slim AS builder
+
+ARG SERVICE_NAME
+ENV SERVICE_NAME=${SERVICE_NAME}
+ARG DEPENDENCY_GROUP
+
+COPY ./pyproject.toml /
+COPY ./extract_deps.py /
+RUN pip install --no-cache-dir toml \
+    && dependency_group="${DEPENDENCY_GROUP:-${SERVICE_NAME}}" \
+    && python3 extract_deps.py "${dependency_group}" \
+    && pip install --no-cache-dir -r "requirements_${dependency_group}.txt"
+
+FROM docker.io/nvidia/cuda:12.3.2-cudnn9-runtime-ubuntu22.04
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG SERVICE_NAME
+ENV SERVICE_NAME=${SERVICE_NAME}
+
+COPY --from=builder /usr/local/lib/python3.10/site-packages \
+    /usr/local/lib/python3.10/dist-packages
+COPY ./pyproject.toml ./README.md /opt/vidi18n/
+COPY ./src /opt/vidi18n/src
+WORKDIR /opt/vidi18n
+RUN python3 -m pip install --no-cache-dir .
+
+CMD ["sh", "-c", "exec python3 -m \"vidi18n.services.${SERVICE_NAME}\""]

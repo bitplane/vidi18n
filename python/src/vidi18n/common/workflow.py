@@ -9,7 +9,8 @@ from redis import Redis
 from redis.exceptions import ResponseError
 
 from vidi18n.common.redis import get_redis
-from vidi18n.common.settings import MAX_ATTEMPTS, job_key, video_key
+from vidi18n.common.metrics import record_stage
+from vidi18n.common.settings import MAX_ATTEMPTS, job_key, video_key, worker_key
 from vidi18n.schemas.workflow import Event
 
 logger = logging.getLogger(__name__)
@@ -50,12 +51,19 @@ def run_worker(
     handler: Callable[[Redis, Event], None],
     *,
     redis: Redis | None = None,
+    readiness: dict | None = None,
 ):
     redis = redis or get_redis()
     ensure_group(redis, stream, group)
     consumer = f"{socket.gethostname()}-{os.getpid()}"
 
     while True:
+        if readiness is not None:
+            redis.set(
+                worker_key(group),
+                json.dumps({"consumer": consumer, **readiness}),
+                ex=60,
+            )
         messages = redis.xreadgroup(
             group,
             consumer,
@@ -70,7 +78,14 @@ def run_worker(
                 event = None
                 try:
                     event = Event.model_validate_json(values[b"event"])
+                    started = time.monotonic()
                     handler(redis, event)
+                    record_stage(
+                        redis,
+                        event.job_id,
+                        group,
+                        round((time.monotonic() - started) * 1000),
+                    )
                     redis.xack(stream, group, message_id)
                 except Exception as error:
                     logger.exception(

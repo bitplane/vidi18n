@@ -22,3 +22,11 @@ def job_key(job_id: str) -> str:
 
 def caption_stream(video_id: str, language: str) -> str:
     return f"vidi18n:captions:{video_id}:{language}"
+
+
+def metrics_key(job_id: str) -> str:
+    return f"vidi18n:metrics:{job_id}"
+
+
+def worker_key(worker: str) -> str:
+    return f"vidi18n:worker:{worker}:ready"

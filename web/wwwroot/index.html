@@ -72,6 +72,12 @@
         item.id = cue.segment_id;
         track.addCue(item);
       });
+      eventSource.addEventListener("error", event => {
+        if (event.data) {
+          status.textContent = `Processing failed: ${JSON.parse(event.data).error}`;
+          eventSource.close();
+        }
+      });
       eventSource.onerror = () => {
         status.textContent = "Caption connection interrupted; reconnecting…";
       };
@@ -90,10 +96,13 @@
           player.src = video.media_url;
           mediaReady = true;
         }
-        const lead = Math.max(0, video.translated_through_ms - player.currentTime * 1000);
+        const lead = video.translated_through_ms - player.currentTime * 1000;
+        const position = lead >= 0
+          ? `${(lead / 1000).toFixed(0)}s ahead`
+          : `${(-lead / 1000).toFixed(0)}s behind; captions catching up`;
         status.textContent =
           `${video.job.stage}: translated through ${(video.translated_through_ms / 1000).toFixed(0)}s ` +
-          `(${(lead / 1000).toFixed(0)}s ahead)`;
+          `(${position})`;
 
         const threshold = Math.min(20000, video.duration_ms || 20000);
         if (!started && mediaReady && video.translated_through_ms >= threshold) {
@@ -105,7 +114,10 @@
           }
         }
         if (video.status === "completed") {
-          status.textContent = "Translation complete.";
+          const metrics = video.metrics;
+          status.textContent =
+            `Translation complete in ${(metrics.processing_elapsed_ms / 1000).toFixed(1)}s ` +
+            `(RTF ${metrics.realtime_factor}).`;
           return;
         }
         await wait(1000);

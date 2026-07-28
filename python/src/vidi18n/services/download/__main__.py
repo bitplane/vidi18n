@@ -4,7 +4,12 @@ from vidi18n.services.download.listeners import download_requested
 
 
 def main():
-    run_worker(STREAM_DOWNLOAD, "download", download_requested)
+    run_worker(
+        STREAM_DOWNLOAD,
+        "download",
+        download_requested,
+        readiness={"status": "ready"},
+    )
 
 
 if __name__ == "__main__":

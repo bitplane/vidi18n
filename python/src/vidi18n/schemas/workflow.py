@@ -22,7 +22,18 @@ class Event(BaseModel):
     input_artifact: dict[str, Any] | None = None
     source_language: str = "en"
     target_language: str = "fr"
+    processors: list["ProcessorRef"] = Field(default_factory=list)
     created_at: str = Field(default_factory=now)
+
+
+class ProcessorRef(BaseModel):
+    stage: str
+    engine: str
+    engine_version: str
+    mode: str
+    model: str
+    device: str = "cpu"
+    compute_type: str | None = None
 
 
 class CreateVideoRequest(BaseModel):

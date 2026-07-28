@@ -5,7 +5,7 @@ set -e
 build/podman-compose.sh \
     --file compose.local.yaml \
     --profile models \
-    run --rm models
+    run --build --rm models
 
 exec build/podman-compose.sh \
     --file compose.local.yaml \

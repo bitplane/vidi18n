@@ -1,4 +1,5 @@
 import json
+from importlib.metadata import version
 from pathlib import Path
 
 from redis import Redis
@@ -6,18 +7,58 @@ from redis import Redis
 from vidi18n.common.artifacts import artifacts
 from vidi18n.common.settings import PROCESSOR_MODE, STREAM_PACKAGE
 from vidi18n.common.workflow import enqueue
-from vidi18n.schemas.workflow import Event
+from vidi18n.schemas.workflow import Event, ProcessorRef
 
 
-def translate_chunk(redis: Redis, event: Event):
-    segments = json.loads(Path(event.input_artifact["path"]).read_text())
-    if PROCESSOR_MODE == "local":
+class DeterministicTranslator:
+    provenance = ProcessorRef(
+        stage="translate",
+        engine="vidi18n-deterministic",
+        engine_version="1",
+        mode="deterministic",
+        model="fixture-en-fr",
+    )
+
+    def translate(self, text: str) -> str:
+        return text
+
+
+class ArgosTranslator:
+    def __init__(self):
+        import argostranslate.package
         import argostranslate.translate
 
+        installed = argostranslate.translate.get_installed_languages()
+        source = next(language for language in installed if language.code == "en")
+        target = next(language for language in installed if language.code == "fr")
+        self.translation = source.get_translation(target)
+        package = next(
+            item
+            for item in argostranslate.package.get_installed_packages()
+            if item.from_code == "en" and item.to_code == "fr"
+        )
+        self.provenance = ProcessorRef(
+            stage="translate",
+            engine="argostranslate",
+            engine_version=version("argostranslate"),
+            mode="local",
+            model=f"translate-en_fr-{package.package_version}",
+        )
+
+    def translate(self, text: str) -> str:
+        return self.translation.translate(text)
+
+
+def create_translator():
+    return ArgosTranslator() if PROCESSOR_MODE == "local" else DeterministicTranslator()
+
+
+def translate_chunk(redis: Redis, event: Event, processor=None):
+    processor = processor or create_translator()
+    segments = json.loads(Path(event.input_artifact["path"]).read_text())
+    if PROCESSOR_MODE == "local":
         for segment in segments:
-            segment["text"] = argostranslate.translate.translate(
-                segment["text"], event.source_language, event.target_language
-            )
+            segment["text"] = processor.translate(segment["text"])
     else:
         for segment in segments:
             segment["text"] = f"Bonjour du segment {event.chunk_index}."
@@ -39,5 +80,6 @@ def translate_chunk(redis: Redis, event: Event):
             input_artifact=artifact,
             source_language=event.source_language,
             target_language=event.target_language,
+            processors=[*event.processors, processor.provenance],
         ),
     )

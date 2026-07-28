@@ -4,7 +4,12 @@ from vidi18n.services.package.listeners import package_chunk
 
 
 def main():
-    run_worker(STREAM_PACKAGE, "package", package_chunk)
+    run_worker(
+        STREAM_PACKAGE,
+        "package",
+        package_chunk,
+        readiness={"status": "ready"},
+    )
 
 
 if __name__ == "__main__":

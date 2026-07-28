@@ -71,6 +71,42 @@ make models
 make node-local
 ```
 
+`make models` is the only command which downloads model data. It writes a
+manifest into the `vidi18n_models` volume and verifies that both processors can
+load. Recheck an existing installation without network access with:
+
+```bash
+make models-verify
+```
+
+The local CPU node keeps one `faster-whisper` `tiny.en` model and one Argos
+English-to-French translator in memory per worker. Its defaults are CPU `int8`
+with four transcription threads. Override the thread count with
+`VIDI18N_WHISPER_CPU_THREADS`.
+
+Run the opt-in real-model acceptance benchmark with:
+
+```bash
+make test-model-cpu
+```
+
+It uses the generated 66-second fixture and requires the first translated cue
+within 20 seconds and a total real-time factor below 1.0. It also asserts that
+the API reports real processor provenance, preventing deterministic adapters
+from producing a false-positive result.
+
+NVIDIA GPU transcription is an optional rootless CDI deployment:
+
+```bash
+make test-model-gpu
+build/podman-compose.sh --file compose.gpu.yaml up --build
+```
+
+The host must provide a working NVIDIA driver, NVIDIA Container Toolkit CDI
+configuration, CUDA 12-compatible hardware, and the `nvidia.com/gpu=all` CDI
+device. GPU mode is explicit and fails rather than silently falling back to
+CPU. Translation remains in the independent CPU-based Argos worker.
+
 ## Intended workflow
 
 The stable development entry points are:
@@ -118,6 +154,11 @@ of claimed work in addition to the successful path.
 Pub/Sub is appropriate for transient progress notifications. Work which must
 survive a worker restart belongs in a Redis Stream and is acknowledged only
 after its state and output are durable.
+
+Workers publish short-lived readiness records only after their processors have
+loaded successfully. Job responses include processor provenance and Redis-timed
+latency, stage, and real-time-factor measurements. Model bootstrap time is
+reported separately from warm-node job latency.
 
 ## Documentation
 

@@ -84,6 +84,11 @@ make test-integration
 Real local `faster-whisper` and Argos Translate adapters are available through
 the opt-in model bootstrap described in the development guide.
 
+The real-model path keeps processors resident across chunks, reports model and
+device provenance through the API, and includes opt-in CPU and NVIDIA CDI
+performance checks. The current acceptance target is a translated cue within
+20 seconds and total processing faster than playback.
+
 See
 [development](https://github.com/bitplane/vidi18n/blob/master/docs/development.md)
 for prerequisites, current limitations, and the intended developer workflow.

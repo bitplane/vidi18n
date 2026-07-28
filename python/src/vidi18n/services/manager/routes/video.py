@@ -10,11 +10,13 @@ from fastapi.routing import APIRouter
 
 from vidi18n.common.cache import get_cache_key
 from vidi18n.common.redis import get_redis
+from vidi18n.common.metrics import public_metrics, redis_now
 from vidi18n.common.settings import (
     DATA_ROOT,
     STREAM_DOWNLOAD,
     caption_stream,
     job_key,
+    metrics_key,
     video_key,
 )
 from vidi18n.common.workflow import load_json
@@ -30,6 +32,9 @@ def public_video(video: dict, job: dict) -> dict:
     return {
         **video,
         "job": job,
+        "metrics": public_metrics(
+            redis, video["job_id"], video.get("duration_ms")
+        ),
         "media_url": f"/api/video/{video_id}/media",
         "caption_events_url": f"/api/video/{video_id}/captions/{language}/events",
         "caption_url": f"/api/video/{video_id}/captions/{language}.vtt",
@@ -77,9 +82,11 @@ async def create_video(request: CreateVideoRequest):
         source_language=request.source_language,
         target_language=request.target_language,
     )
+    submitted_at, _ = redis_now(redis)
     with redis.pipeline(transaction=True) as pipe:
         pipe.set(video_key(video_id), json.dumps(video))
         pipe.set(job_key(job_id), json.dumps(job))
+        pipe.hsetnx(metrics_key(job_id), "submitted_at", submitted_at)
         pipe.xadd(STREAM_DOWNLOAD, {"event": event.model_dump_json()})
         pipe.execute()
     return public_video(video, job)
